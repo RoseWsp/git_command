@@ -1,0 +1,308 @@
+工作区 --> 暂存区 --> 仓库 
+
+git add 	-- 文件修改添加到暂存区
+git commit  -- 文件修改提交到分支
+git push -u origin  --推送到远程仓库
+
+提交代码前，当然是从远程仓库 pull 代码合并啦 
+git pull origin
+
+然后查看哪些文件被修改了，其状态如何(是已经添加到 暂存区，还是Untracked)
+git status 
+
+1.提交之前必不可少的要 review 代码， 
+git diff 
+3.提交到暂存区
+git add  
+3.提交到仓库
+git commit  
+	 提交之后，发现错误，想撤回
+		直接可以 git reset --hard HEAD^  回退到上个版本
+				 git reset --hard HEAD^^ 回退到上上个版本
+				 git reset --hard HEAD~100 回退到前100个版本 
+		回到未来：回退旧版本后 git log 就没有最新的提交记录了，最近提交记录的 commit id就找不到了。
+				git reflog 查看命令记录，会存在 commit id 
+				git reset --hard [commit id]
+4.推送远程仓库
+git push -u origin
+
+5.查看提交 记录
+git log --name-only
+6.查看命令记录
+git reflog 
+
+撤销修改 
+git checkout --[文件名] 撤销工作区的修改
+git reset [文件名](git reset HEAD <file>)  	撤销暂存区的修改，即撤销 git add 操作
+git reset 撤销所有 git add 操作即暂存区的修改 
+git reset --hard   | HEAD^   回退到上个版本
+				   | HRAD~10 会退到前10个版本
+				   | d3132649  回退到指定 commit id 版本 | git log   查看提交历史记录，以确定回退到哪个版本
+														 | git reflog 查看命令提交记录，以便确认回到未来哪个版本
+														 
+删除文件
+git rm [文件名] 
+git commit 
+在工作区误删除，未提交到暂存区 
+git checkout --[文件名] 
+实际上是用版本库里的版本替换工作区里的版本。
+
+关联远程仓库
+git remote add origin https://github.com/RoseWsp/testmod.git 
+
+git 分支
+
+分支是git比较于其它 托管工具(svn...)最大的区别. 
+
+分支是一个指针，
+
+查看分支状态 
+git branch 
+
+1.创建分支  
+git branch dev 			|
+2.切换分支 				| git checkout -b dev
+git checkout dev  		|
+
+3.合并分支 
+git merge dev --把dev 分支合并到当前分支上
+
+4.删除分支 
+git branch -d dev --合并后，可以删除分支 dev
+
+解决冲突，
+
+测试，检验 不同分支是否同用一套工作区，和暂存区 
+git init 初始化版本库 
+
+1.首先新建readme.txt 文件 提交到master 分支上. 
+2.新建分支 dev   
+
+现在比较，master 和 dev 分支 的 工作区和 暂存区是是否一致，结论是一致的。
+切换至 dev ,git status 
+切换至 master ,git status 两者状态一直。
+
+现在比较 master 和 dev 分支的工作区是否一致，
+在dev 分支新建文件 dev.txt ,但不 git add 至暂存区。
+切换至 master ,git status 观察其工作区状态。
+两个分支 git status 都显示 dev.txt Untracked 
+初步得出粗略结论，master dev 分支是共用相同的工作区 。
+
+现在比较 master 和 dev 分支的暂存区是否一致。 
+在 dev 分支上，git add dev 添加至暂存区 
+切换至 master ，git status 观察状态 ，发现 dev.txt 已经被添加到暂存区 
+在master 分支上，将 dev.txt 从暂存区撤销，git reset HEAD dev.txt 
+切换至 dev 观察 dev.txt 状态，发现已经从 暂存区撤退出来了变成Untracked 状态，发现已经从
+初步得出粗略结论，master dev 分支是共用相同的暂存区stage 
+
+当 dev.txt commit 到 dev 分支版本库时，隐藏文件夹.git属性变了，文件数量变多，这里得出一个疑问？提交的文件去哪里了？ 
+是否转移到 .git文件夹里了, .git 包含了 分支，分支维护了自己的一个 提交线，这条提交线形成了分支的时间线，
+当切换至 master 分支时，重要发现 工作区的 dev.txt 文件不见了，master 里没有提交 dev.txt ,所以切换master 很可能是 把master 版本库文件替换了工作区里的文件 
+所以我们得出结论，工作区和暂存区是相同共用的，当文件commit 到分支里后，分支自己就对该文件有了一个维护，该文件就和其它分支无关了。
+ 
+ 
+BUG 分支 
+git stash 保存工作区的修改，使得工作区看起来没有任何变化，然后切换成 master ,新建bug 分支来修复bug ,检验 暂存区的修改是否会被保存-检测得到结果 暂存区的修改也是会被保存的。
+git stash 保存工作区的修改--实际上工作区和暂存区的修改都会被保存，（未被git管理的文件不会被保存）
+
+git stash list 查看被保存的工作区列表
+git stash apply 恢复工作区 
+git stash drop 删除工作区
+git stash pop 恢复工作区同时也把 stash 删除了
+
+把工作区的修改内容恢复到工作区，把git add 到暂存区的修改恢复到工作区，总之所有修改都恢复到工作区去了。
+
+注意：恢复了工作区后，应立即删除 stash
+
+远程仓库-多人协作
+git remote -v 查看远程仓库信息
+git push -u origin master
+
+git clone 克隆远程仓库代码，用于第一次
+git checkout -b <branch> origin/branch 在本地创建和远程分支的关联
+git branch --set-upstream branch origin/branch 将本地分支和远程分支建立关联
+
+
+
+
+原理性概述：
+1.提交版本库流程  工作区->暂存区(stage)->版本库(分支)
+2.git checkout --[文件名] 实际上是用版本库里的版本替换工作区里的版本 
+3.HEAD指针指向当前分支，切换分支实际上就是切换HEAD指针的指向
+4.不同分支之间实际上公用一套工作区和暂存区，但版本库自我维护
+
+基本操作:
+git status 
+git diff <file>
+git add <file>
+git commit -m "xx"
+git log --name-only 
+git log -p 
+git reflog 	提交命令记录
+
+撤销操作:
+git checkout -- <file>
+git reset <file> 或者 git reset hard <file>
+git reset 
+git reset --hard HEAD^
+git reset --hard HEAD~100 
+git reset --hard {commit id} 
+
+删除操作:
+git rm <file>
+git commit 
+
+分支：
+git branch 							查看分支
+git branch <brance> 			创建分支
+git checkout <brance>			切换分支
+git checkout -b <brance>		创建并切换分支
+git merge <brance>				合并分支至当前分支
+git branch -d <brance>		删除分支
+git branch -D <brance> 		强制删除分支
+git merge --no-ff -m "merge with no-ff" dev	禁用fast forward 模式
+git merge --no-ff -m "合并分支-B2B商品显示库存"  B2B_UAT
+
+
+工作区 --> 暂存区 --> 仓库
+
+原理性概述：
+1.提交版本库流程 工作区->暂存区(stage)->版本库(分支)
+2.git checkout --[文件名] 实际上是用版本库里的版本替换工作区里的版本 
+3.HEAD指针指向当前分支，切换分支实际上就是切换HEAD指针的指向
+4.不同分支之间实际上公用一套工作区和暂存区，但版本库自我维护
+
+基本操作:
+git status 
+git diff <file>
+git add <file>
+git commit -m "xx"
+git log --name-only 
+git log -p 
+git reflog 提交命令记录
+
+撤销操作:
+git checkout -- <file>
+git reset <file> 或者 git reset HEAD <file>
+git reset 
+git reset --hard HEAD^
+git reset --hard HEAD~100 
+git reset --hard {commit id}
+
+删除操作:
+git rm <file>
+git commit
+
+分支：
+git branch 查看分支
+git branch <brance> 创建分支
+git checkout <brance> 切换分支
+git checkout -b <brance> 创建并切换分支
+git merge <brance> 合并分支至当前分支
+git branch -d <brance> 删除分支
+git branch -D <brance> 强制删除分支
+git merge --no-ff -m "merge with no-ff" dev 禁用fast forward 模式
+git push --set-upstream origin EPOv2_EPO_GOODSV3.0Beta25
+git merge --abort 撤销合并
+
+
+BUG 分支 
+git stash 保存工作区的修改，使得工作区看起来没有任何变化，然后切换成 master ,新建bug 分支来修复bug ,检验 暂存区的修改是否会被保存-检测得到结果 暂存区的修改也是会被保存的。
+git stash 保存工作区的修改--实际上工作区和暂存区的修改都会被保存，（未被git管理的文件不会被保存）
+
+git stash list 查看被保存的工作区列表
+git stash apply 恢复工作区 
+git stash drop 删除工作区
+git stash pop 恢复工作区同时也把 stash 删除了
+
+常用命令备忘
+
+git log --name-only 
+显示已修改的文件清单
+git log -p 显示修改内容
+
+git status 中文乱码
+git config --global core.quotepath false
+
+git log 中文乱码
+git config --global i18n.commitencoding utf-8
+git config --global i18n.logoutputencoding utf-8 
+环境变量设置 
+LESSCHARSET:utf-8
+
+修改 git  log 时间显示格式 
+
+git config log.date format:'%Y-%m-%d %H:%M:%S'
+
+查看单个文件提交记录
+
+git log --pretty=oneline 文件名
+
+查看修改内容
+
+git show commit 
+
+
+git拉取远程分支并创建本地分支
+一、查看远程分支
+git branch -r
+二、拉取远程分支并创建本地分支
+git checkout -b 本地分支名x origin/远程分支名x
+使用该方式会在本地新建分支x，并自动切换到该本地分支x。
+采用此种方法建立的本地分支会和远程分支建立映射关系。
+如果不想建立映射关系，可以：
+git fetch origin 远程分支名x:本地分支名x
+使用该方式会在本地新建分支x，但是不会自动切换到该本地分支x，需要手动checkout。
+本地分支和远程分支建立映射关系的作用见： https://blog.csdn.net/tterminator/article/details/78108550
+git checkout -b my-test  //在当前分支下创建my-test的本地分支分支
+git push origin my-test  //将my-test分支推送到远程
+git branch --set-upstream-to=origin/my-test //将本地分支my-test关联到远程分支my-test上
+git branch -a //查看远程分支
+
+
+
+#多个远程仓库的操作
+- 添加远程仓库
+	git remote add <host name> <url>
+	其中，<host name> 表示你要给这个远程库起的名字，url 表示这个库的地址
+	示例:
+	git remote add my_origin http://git.code.oa.com/v_shpwang/EBDVendorWebUI.git
+	git remote add ebd_origin http://git.code.oa.com/ebd/EBDVendorWebUI.git
+- 更新代码 
+	git pull <host name> <branch name>
+	
+	示例:
+	git pull ebd_origin feature/ebd_vendorwebui_v1.0
+
+- 推送代码
+	git push <host name> <branch name>
+	示例:
+	git push my_origin feature/ebd_vendorwebui_v1.0
+
+
+
+
+
+- 放弃合并
+ git merge --abort
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
